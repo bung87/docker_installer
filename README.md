@@ -19,7 +19,9 @@ if remote machine has no **git** installed or git version less than 1.7 this pro
 
 ## 如何使用？  
 
-`docker_installer <ssh ip> <ssh port> <ssh user> <ssh password>`
+`docker_installer <ssh ip> <ssh port> <ssh user> <ssh password> --log=<log level>`
+
+--log is optional.supported log level CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET default is NOTSET.
 
 ## download data store dirctory
 
