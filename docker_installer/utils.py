@@ -17,10 +17,23 @@ def is_host_can_access_docker():
         # log.info("Host can not access {0}".format(docker_url))
         return False
 
+def is_host_can_access_github():
+    docker_url = "github.com"
+    conn = httplib.HTTPConnection(docker_url, timeout=5)
+    try:
+        conn.request("HEAD", "/")
+        conn.close()
+        # log.info("Host can access {0}".format(docker_url))
+        return True
+    except Exception:
+        conn.close()
+        # log.info("Host can not access {0}".format(docker_url))
+        return False
+
 def get_remote_content_size(url):
     request = urllib2.Request(url)
     request.get_method = lambda : 'HEAD'
-    response = urllib2.urlopen(request)
+    response = urllib2.urlopen(request,timeout=5)
     return int(response.info()["Content-Length"])
 
 def createSSHClient(server, port, user, password):
