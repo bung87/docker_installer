@@ -75,16 +75,18 @@ def progress(filename, size, sent):
 
 def check_if_docker_installed():
     stdin, stdout, stderr = ssh_client.exec_command("docker -v")
-
-    if stdout.read() != "":
+    output = stdout.read()
+    groups = re.findall("\d+\.\d+", output)
+    if output != ""  and len(groups) != 0 :
         log.info("Target already has docker installed!")
         return True
     return False
 
 def check_if_docker_compose_installed():
     stdin, stdout, stderr = ssh_client.exec_command("docker-compose -v")
-
-    if stdout.read() != "":
+    output = stdout.read()
+    groups = re.findall("\d+\.\d+", output)
+    if output != ""  and len(groups) != 0:
         log.info("Target already has docker-compose installed!")
         return True
     return False
@@ -115,22 +117,29 @@ def ensure_git():
     anchors = soup.findAll('a', text=regx)
     length = len(anchors)
     last = anchors[length - 1]
-    last_href = last["href"]
+    try:
+        last_href = last["href"]
+    except Exception as e:
+        last_href = last
     basename = os.path.basename(last_href)
     log.info("latest git version found:{0}".format(basename))
     lastlink = urlparse.urljoin(url, last_href)
     filepath = host_home(basename)
-    extract_dir = os.path.splitext(basename)[0]
+    extract_dir = os.path.splitext(os.path.splitext(basename)[0])[0]
     ver = regx.match(basename).group(1)
 
     def callback():
         remote_file_path = remote_home(basename)
         remote_path = os.path.dirname(remote_file_path)
-        scp.put(filepath, recursive=True, remote_path=remote_file_path)
+        stdin, stdout, stderr = ssh_client.exec_command("stat -c %s {0}".format(remote_file_path))
+        filesize = stdout.read().strip()
+        if not int(filesize) == os.path.getsize(filepath):
+            scp.put(filepath, recursive=True, remote_path=remote_file_path)
         ssh_client.exec_command(
             "cd {0} && tar -xzf {1}".format(remote_path, basename))
+        # ensure libssl-dev libcurl-dev(libcurl4-openssl-dev)
         sshsudo(
-            "cd {0} && make prefix=/usr && make prefix=/usr install".format(os.path.join(remote_path, extract_dir)))
+            "make --directory={0} prefix=/usr && make --directory={0} prefix=/usr install".format(os.path.join(remote_path, extract_dir)) )
     if not os.path.exists(filepath):
         log.info("download git")
         _reporthook = partial(reporthook, callback)
@@ -401,14 +410,14 @@ def install_docker():
         ipv = float(re.findall("\d+\.\d+", stdout.read())[0])
         stdin, stdout, stderr = ssh_client.exec_command("git --version")
         gitvs = stdout.read()
-        if gitvs == '':
+        gitvg = re.findall("\d+\.\d+", gitvs)
+        if gitvs == '' or len(gitvg) == 0 or gitvg[0] < 1.7:
             # git install
-            stdout = ensure_git()
-        gitv = float(re.findall("\d+\.\d+", gitvs)[0])
+            ensure_git()
         stdin, stdout, stderr = ssh_client.exec_command(
             "python -c 'import platform;print \"萌\".join(platform.architecture())'")
         bits, linkage = stdout.read().split("萌")
-        if (ipv >= 1.4 and gitv >= 1.7 and bits == "64bit"):
+        if (ipv >= 1.4 and bits == "64bit"):
             install_docker_offline()
         else:
             exit
