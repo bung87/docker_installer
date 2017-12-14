@@ -1,10 +1,10 @@
+# https://docs.docker.com/engine/installation/#server
+# docker ce
 SUPPORTED_ARCH = {
     "Ubuntu": ['amd64', 'x86_64', 'armhf', 's390x'],
     "Debian": ['amd64', 'x86_64', 'armhf'],
-    # offcial doc unmentioned just assuming.
-    "CentOS": ['amd64', 'x86_64', 'armhf', 's390x'],
-    # offcial doc unmentioned just assuming.
-    "Fedora": ['amd64', 'x86_64', 'armhf', 's390x']
+    "CentOS": ['amd64', 'x86_64'],
+    "Fedora": ['amd64', 'x86_64']
     #  CentOS 7
 }
 

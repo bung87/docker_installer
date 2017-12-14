@@ -57,6 +57,19 @@ def init():
         "python -c 'import platform;print \"萌\".join(platform.uname())'")
 
     (system, node, release, version, machine, processor) = stdout.read().split("萌")
+    if system == "Linux":
+        stdin, stdout, stderr = ssh_client.exec_command("python -c 'import lsb_release;print lsb_release.get_lsb_information()'")
+        if stdout != "":
+            lsb = eval(stdout)
+            system = lsb.get("ID")
+            release = lsb.get("RELEASE") # Ubuntu '16.04'
+        else:
+            stdin, stdout, stderr = ssh_client.exec_command("python -c 'import platform;print platform.linux_distribution()'")
+            if stdout != "":
+                lsb = eval(stdout)
+                system = lsb[0].split(" ")[0]
+                release = lsb[1] # CentOS 7.3.1611
+
     processor = processor.strip()
     stdin, stdout, stderr = ssh_client.exec_command("echo $HOME")
     REMOTE_HOME = stdout.read().strip()
@@ -193,19 +206,6 @@ def install_docker_offline():
     stdin, stdout, stderr = ssh_client.exec_command(
         "stat -c %s {0}".format(remote_file_path))
     filesize = stdout.read().strip()
-    if filesize == "":
-        # docker tarball not downloaded on target
-        pass
-    else:
-        if os.path.exists(filepath) and int(filesize) == os.path.getsize(filepath):
-            ssh_client.exec_command(
-                "cd {0} && tar -xzf {1}".format(remote_path, basename))
-            sshsudo(
-                "cp {0}/* /usr/bin/".format(os.path.join(remote_path, "docker")))
-            return
-        else:
-            # partial docker tarball on target
-            pass
 
     def callback():
         ssh_client.exec_command("mkdir -p {0}".format(remote_path))
@@ -217,6 +217,21 @@ def install_docker_offline():
         ssh_client.exec_command(
             "cd {0} && tar -xzf {1}".format(remote_path, basename))
         sshsudo("cp {0}/* /usr/bin/".format(os.path.join(remote_path, "docker")))
+
+    if filesize == "":
+        # docker tarball not downloaded on target
+        callback()
+    else:
+        if os.path.exists(filepath) and int(filesize) == os.path.getsize(filepath):
+            ssh_client.exec_command(
+                "cd {0} && tar -xzf {1}".format(remote_path, basename))
+            sshsudo(
+                "cp {0}/* /usr/bin/".format(os.path.join(remote_path, "docker")))
+            return
+        else:
+            # partial docker tarball on target
+            pass
+
     if not os.path.exists(filepath):
         log.info("Host has not docker tarball")
         if not is_host_can_access_docker():
@@ -229,16 +244,19 @@ def install_docker_offline():
             try:
                 # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
                 urlretrieve(lastlink, filepath, _reporthook)
-            except socket.timeout:
+            except socket.timeout as e:
+                log.error(e.strerror)
                 pass
             except IOError as e:
                 log.error(e.strerror)
-                raise e
+                pass
             except Exception as e:
                 log.error(e)
+                pass
             finally:
-                urllib.urlcleanup()
-                ssh_client.close()
+                # urllib.urlcleanup()
+                # ssh_client.close()
+                pass
 
     else:
         if get_remote_content_size(lastlink) == os.path.getsize(filepath):
@@ -398,29 +416,33 @@ def install_docker_compose():
             # partial docker compose on host
             pass
 
+def precheck_install_docker_offline():
+    stdin, stdout, stderr = ssh_client.exec_command("iptables -V")
+    ipv = float(re.findall("\d+\.\d+", stdout.read())[0])
+    stdin, stdout, stderr = ssh_client.exec_command("git --version")
+    gitvs = stdout.read()
+    gitvg = re.findall("\d+\.\d+", gitvs)
+    if gitvs == '' or len(gitvg) == 0 or gitvg[0] < 1.7:
+        # git install
+        ensure_git()
+    stdin, stdout, stderr = ssh_client.exec_command(
+        "python -c 'import platform;print \"萌\".join(platform.architecture())'")
+    bits, linkage = stdout.read().split("萌")
+    if (ipv >= 1.4 and bits == "64bit"):
+        install_docker_offline()
+    else:
+        log.error("Not fit prerequires!")
+        exit
+
 def install_docker():   
     if system in SUPPORTED_PLATFORM:
         if is_target_can_access_internet():
             install_docker_online()
         else:
             log.info("Target has no internet connection")
-
+            precheck_install_docker_offline()
     else:  # static
-        stdin, stdout, stderr = ssh_client.exec_command("iptables -V")
-        ipv = float(re.findall("\d+\.\d+", stdout.read())[0])
-        stdin, stdout, stderr = ssh_client.exec_command("git --version")
-        gitvs = stdout.read()
-        gitvg = re.findall("\d+\.\d+", gitvs)
-        if gitvs == '' or len(gitvg) == 0 or gitvg[0] < 1.7:
-            # git install
-            ensure_git()
-        stdin, stdout, stderr = ssh_client.exec_command(
-            "python -c 'import platform;print \"萌\".join(platform.architecture())'")
-        bits, linkage = stdout.read().split("萌")
-        if (ipv >= 1.4 and bits == "64bit"):
-            install_docker_offline()
-        else:
-            exit
+        log.error("Not supported platform!")
 
 def main():
     socket.setdefaulttimeout(10)
