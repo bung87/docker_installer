@@ -39,7 +39,7 @@ import io
 class FakeClient:
     def exec_command(self,s):
         pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output = pip.stdout.read()
+        output = pip.stdout.read().replace(r"\n","")
         f = io.StringIO(output.decode("utf8"))
         log.info("FakeClient:exec_command {0}".format(output))
         return (pip.stdin,f,pip.stderr)
@@ -76,7 +76,7 @@ def init():
     stdin, stdout, stderr = ssh_client.exec_command(
         "python -c 'import platform;print \"萌\".join(platform.uname())'")
 
-    (system, node, release, version, machine, processor) = stdout.read().split("萌")
+    (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
     if system == "Linux":
         stdin, stdout, stderr = ssh_client.exec_command("python -c 'import lsb_release;print lsb_release.get_lsb_information()'")
         output = stdout.read()
@@ -446,7 +446,7 @@ def precheck_install_docker_offline():
         ensure_git()
     stdin, stdout, stderr = ssh_client.exec_command(
         "python -c 'import platform;print \"萌\".join(platform.architecture())'")
-    bits, linkage = stdout.read().split("萌")
+    bits, linkage = stdout.read().split(u"萌")
     if (ipv >= 1.4 and bits == "64bit"):
         install_docker_offline()
     else:
