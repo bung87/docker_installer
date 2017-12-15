@@ -5,10 +5,10 @@ jobs:
        - image: circleci/python:2.7
      steps:
        - checkout 
-       - restore_cache:
-           key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-       - save_cache:
-          key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
+      #  - restore_cache:
+      #      key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
+      #  - save_cache:
+      #     key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
        - run: pip install .
    test:
      docker:
