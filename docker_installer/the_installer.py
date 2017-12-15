@@ -77,7 +77,7 @@ def init():
         "python -c 'import platform;print \"萌\".join(platform.uname())'")
 
     (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
-    if verson.find("Ubuntu") > 0:
+    if version.find("Ubuntu") > 0:
         system = "Ubuntu"
         found = re.findall("\d+\.\d+\.\d+", version)
         if len(found):
