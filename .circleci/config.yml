@@ -10,19 +10,20 @@ jobs:
       #  - save_cache:
       #     key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
        - run: sudo pip install .
-   test:
-     docker:
-       - image: circleci/python:2.7
-     steps:
        - run: docker_installer --local --log info --password
+  #  test:
+  #    docker:
+  #      - image: circleci/python:2.7
+  #    steps:
+  #      - run: docker_installer --local --log info --password
 workflows:
   version: 2
   build_and_test:
     jobs:
       - build
-      - test:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      # - test:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
