@@ -442,7 +442,12 @@ def install_docker_compose():
 
 def precheck_install_docker_offline():
     stdin, stdout, stderr = ssh_client.exec_command("iptables -V")
-    ipv = float(re.findall("\d+\.\d+", stdout.read())[0])
+    found = re.findall("\d+\.\d+", stdout.read())
+    if len(found):
+        ipv = float(found[0])
+    else:
+        ssh_client.exec_command("apt-get update && apt-get install -y iptables")
+        ipv = 1.4
     stdin, stdout, stderr = ssh_client.exec_command("git --version")
     gitvs = stdout.read()
     gitvg = re.findall("\d+\.\d+", gitvs)
