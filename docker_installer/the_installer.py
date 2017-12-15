@@ -184,7 +184,7 @@ def ensure_git():
             "make --directory={0} prefix=/usr && make --directory={0} prefix=/usr install".format(os.path.join(remote_path, extract_dir)) )
     if not os.path.exists(filepath):
         log.info("download git")
-        _reporthook = partial(reporthook, callback)
+        _reporthook = partial(reporthook, callback,filepath)
         urlretrieve(lastlink, filepath, _reporthook)
     else:
         if get_remote_content_size(lastlink) == os.path.getsize(filepath):
@@ -195,11 +195,11 @@ def ensure_git():
             pass
 
 
-def reporthook(callback, bytes_so_far, chunk_size, total_size):
+def reporthook(callback,filepath, bytes_so_far, chunk_size, total_size):
     percent = float(bytes_so_far) / total_size
     percent = round(percent * 100, 2)
-    log.info("Downloaded %d of %d bytes (%0.2f%%)" %
-             (bytes_so_far, total_size, percent))
+    log.info("Downloaded %s %d of %d bytes (%0.2f%%)" %
+             (filepath,bytes_so_far, total_size, percent))
     if bytes_so_far >= total_size:
         callback()
 
@@ -253,7 +253,7 @@ def install_docker_offline():
             if not is_host_can_access_docker():
                 exit()
 
-            _reporthook = partial(reporthook, callback)
+            _reporthook = partial(reporthook, callback,filepath)
             mkdir_p(os.path.dirname(filepath))
 
             # for i in xrange(3):
@@ -419,7 +419,7 @@ def install_docker_compose():
         log.info("Host has not docker compose")
         if not is_host_can_access_github():
             exit()
-        _reporthook = partial(reporthook, callback)
+        _reporthook = partial(reporthook, callback,filepath)
         mkdir_p(os.path.dirname(filepath))
 
         # for i in xrange(3):
