@@ -476,8 +476,6 @@ def args_parse():
                         metavar="string", action='store', type=str)
     parser.add_argument('--local', dest="local", default=False,action='store_true', help='install to local\ndocker_installer --password <rootpassword> --local')
     args = parser.parse_args()
-    print(args)
-  
 
 def main():
     socket.setdefaulttimeout(10)
