@@ -49,7 +49,7 @@ class FakeScpClient:
         shutil.copytree(filepath,remote_path)
 
 def init():
-    global log, ssh_client, scp_client,loginpassword, HOST_HOME, REMOTE_HOME, system, processor,machine
+    global log, ssh_client, scp_client,loginpassword, HOST_HOME, REMOTE_HOME, system, processor,machine,os_market_name
     log = logging.getLogger(__name__)
     # loglevel = "ERROR"
     loglevel = args.log
@@ -79,7 +79,7 @@ def init():
     (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
  
     if version.find("Ubuntu") > 0:
-        system = "Ubuntu"
+        os_market_name = "Ubuntu"
         found = re.findall("\d+\.\d+\.\d+", version)
         if len(found):
             release = found[0]
@@ -88,14 +88,14 @@ def init():
         output = stdout.read()
         if output != "":
             lsb = eval(output)
-            system = lsb.get("ID")
+            os_market_name = lsb.get("ID")
             release = lsb.get("RELEASE") # Ubuntu '16.04'
         else:
             stdin, stdout, stderr = ssh_client.exec_command("python -c 'import platform;print platform.linux_distribution()'")
             output = stdout.read()
             if output != "":
                 lsb = eval(output)
-                system = lsb[0].split(" ")[0]
+                os_market_name = lsb[0].split(" ")[0]
                 release = lsb[1] # CentOS 7.3.1611
     processor = processor.strip()
     if not processor:
@@ -111,8 +111,9 @@ def sudo(e):
 def progress(filename, size, sent):
     percent = float(sent) / size
     percent = round(percent * 100, 2)
-    log.info("Sent %s %d of %d bytes (%0.2f%%)" %
-             (filename, sent, size, percent))
+    if percent > 1:
+        log.info("Sent %s %d of %d bytes (%0.2f%%)" %
+                (filename, sent, size, percent))
 
 
 def check_if_docker_installed():
@@ -255,23 +256,23 @@ def install_docker_offline():
             _reporthook = partial(reporthook, callback)
             mkdir_p(os.path.dirname(filepath))
 
-            for i in xrange(3):
-                try:
-                    # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
-                    urlretrieve(lastlink, filepath, _reporthook)
-                except socket.timeout as e:
-                    log.error(e.strerror)
-                    pass
-                except IOError as e:
-                    log.error(e.strerror)
-                    pass
-                except Exception as e:
-                    log.error(e)
-                    pass
-                finally:
-                    # urllib.urlcleanup()
-                    # ssh_client.close()
-                    pass
+            # for i in xrange(3):
+            try:
+                # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
+                urlretrieve(lastlink, filepath, _reporthook)
+            except socket.timeout as e:
+                log.error(e.strerror)
+                pass
+            except IOError as e:
+                log.error(e.strerror)
+                pass
+            except Exception as e:
+                log.error(e)
+                pass
+            finally:
+                # urllib.urlcleanup()
+                # ssh_client.close()
+                pass
 
         else:
             if get_remote_content_size(lastlink) == os.path.getsize(filepath):
@@ -296,9 +297,9 @@ def install_docker_offline():
 
 def install_docker_online():
     log.info("install_docker_online")
-    if system == "Ubuntu":
+    if os_market_name == "Ubuntu":
         # https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
-        if processor in SUPPORTED_ARCH[system]:
+        if processor in SUPPORTED_ARCH[os_market_name]:
             sshsudo("apt-get update")
             sshsudo("""
                 apt-get install \
@@ -340,7 +341,7 @@ def install_docker_online():
         else:
             exit()
 
-    elif system == "CentOS":
+    elif os_market_name == "CentOS":
         # https://docs.docker.com/engine/installation/linux/docker-ce/centos/#prerequisites
         sshsudo(
             """

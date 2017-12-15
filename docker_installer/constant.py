@@ -9,6 +9,6 @@ SUPPORTED_ARCH = {
 }
 
 SUPPORTED_PLATFORM = ['Darwin', 'Windows',
-                     'Ubuntu', 'Debian', 'CentOS', 'Fedora']
+                     'Linux']
 
 BASE_DIR_NAME = "docker_installer_resource"
