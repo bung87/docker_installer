@@ -247,7 +247,39 @@ def install_docker_offline():
 
     if filesize == "":
         # docker tarball not downloaded on target
-        callback()
+        if not os.path.exists(filepath):
+            log.info("Host has not docker tarball")
+            if not is_host_can_access_docker():
+                exit()
+
+            _reporthook = partial(reporthook, callback)
+            mkdir_p(os.path.dirname(filepath))
+
+            for i in xrange(3):
+                try:
+                    # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
+                    urlretrieve(lastlink, filepath, _reporthook)
+                except socket.timeout as e:
+                    log.error(e.strerror)
+                    pass
+                except IOError as e:
+                    log.error(e.strerror)
+                    pass
+                except Exception as e:
+                    log.error(e)
+                    pass
+                finally:
+                    # urllib.urlcleanup()
+                    # ssh_client.close()
+                    pass
+
+        else:
+            if get_remote_content_size(lastlink) == os.path.getsize(filepath):
+                log.info("Host already has docker tarball")
+                callback()
+            else:
+                # partial docker tarball on host
+                pass
     else:
         if os.path.exists(filepath) and int(filesize) == os.path.getsize(filepath):
             ssh_client.exec_command(
@@ -259,39 +291,7 @@ def install_docker_offline():
             # partial docker tarball on target
             pass
 
-    if not os.path.exists(filepath):
-        log.info("Host has not docker tarball")
-        if not is_host_can_access_docker():
-            exit()
 
-        _reporthook = partial(reporthook, callback)
-        mkdir_p(os.path.dirname(filepath))
-
-        for i in xrange(3):
-            try:
-                # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
-                urlretrieve(lastlink, filepath, _reporthook)
-            except socket.timeout as e:
-                log.error(e.strerror)
-                pass
-            except IOError as e:
-                log.error(e.strerror)
-                pass
-            except Exception as e:
-                log.error(e)
-                pass
-            finally:
-                # urllib.urlcleanup()
-                # ssh_client.close()
-                pass
-
-    else:
-        if get_remote_content_size(lastlink) == os.path.getsize(filepath):
-            log.info("Host already has docker tarball")
-            callback()
-        else:
-            # partial docker tarball on host
-            pass
 
 
 def install_docker_online():
