@@ -422,20 +422,22 @@ def install_docker_compose():
         _reporthook = partial(reporthook, callback)
         mkdir_p(os.path.dirname(filepath))
 
-        for i in xrange(3):
-            try:
-                # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
-                urlretrieve(lastlink, filepath, _reporthook)
-            except socket.timeout:
-                pass
-            except IOError as e:
-                log.error(e.strerror)
-                raise e
-            except Exception as e:
-                log.error(e)
-            finally:
-                urllib.urlcleanup()
-                ssh_client.close()
+        # for i in xrange(3):
+        try:
+            # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
+            urlretrieve(lastlink, filepath, _reporthook)
+        except socket.timeout:
+            pass
+        except IOError as e:
+            log.error(e.strerror)
+            raise e
+        except Exception as e:
+            log.error(e)
+            pass
+        finally:
+            pass
+            # urllib.urlcleanup()
+            # ssh_client.close()
     else:
         if get_remote_content_size(lastlink) == os.path.getsize(filepath):
             log.info("Host already has docker compose")
