@@ -1,4 +1,4 @@
-# docker_installer  [![Build Status](https://travis-ci.org/bung87/docker_installer.svg?branch=master)](https://travis-ci.org/bung87/docker_installer)
+# docker_installer  [![Build Status](https://travis-ci.org/bung87/docker_installer.svg?branch=master)](https://travis-ci.org/bung87/docker_installer) [![CircleCI](https://circleci.com/gh/bung87/docker_installer.svg?style=svg)](https://circleci.com/gh/bung87/docker_installer)
 
 install docker to remote machine through ssh automatically.  
 
