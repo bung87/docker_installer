@@ -9,7 +9,7 @@ jobs:
       #      key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
       #  - save_cache:
       #     key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-       - run: pip install .
+       - run: sudo pip install .
    test:
      docker:
        - image: circleci/python:2.7
