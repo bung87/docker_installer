@@ -9,7 +9,7 @@ jobs:
       #      key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
       #  - save_cache:
       #     key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-       - run: su - && pip install .
+       - run: pip install .
        - run: docker_installer --local --log info --password
   #  test:
   #    docker:
