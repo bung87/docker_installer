@@ -77,8 +77,7 @@ def init():
         "python -c 'import platform;print \"萌\".join(platform.uname())'")
 
     (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
-    if not processor:
-        processor = machine
+ 
     if version.find("Ubuntu") > 0:
         system = "Ubuntu"
         found = re.findall("\d+\.\d+\.\d+", version)
@@ -99,6 +98,8 @@ def init():
                 system = lsb[0].split(" ")[0]
                 release = lsb[1] # CentOS 7.3.1611
     processor = processor.strip()
+    if not processor:
+        processor = machine
     stdin, stdout, stderr = ssh_client.exec_command("echo $HOME")
     REMOTE_HOME = stdout.read().strip()
 
