@@ -199,7 +199,7 @@ def reporthook(callback,filepath, bytes_so_far, chunk_size, total_size):
     percent = float(bytes_so_far) / total_size
     percent = round(percent * 100, 2)
     log.info("Downloaded %s %d of %d bytes (%0.2f%%)" %
-             (filepath,bytes_so_far, total_size, percent))
+             (os.path.basename(filepath),bytes_so_far, total_size, percent))
     if bytes_so_far >= total_size:
         callback()
 
@@ -260,19 +260,19 @@ def install_docker_offline():
             try:
                 # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
                 urlretrieve(lastlink, filepath, _reporthook)
-            except socket.timeout as e:
-                log.error(e.strerror)
-                pass
-            except IOError as e:
-                log.error(e.strerror)
-                pass
+            # except socket.timeout as e:
+            #     log.error(e.strerror)
+            #     pass
+            # except IOError as e:
+            #     log.error(e.strerror)
+            #     pass
             except Exception as e:
                 log.error(e)
-                pass
-            finally:
-                # urllib.urlcleanup()
-                # ssh_client.close()
-                pass
+                raise e
+            # finally:
+            #     # urllib.urlcleanup()
+            #     # ssh_client.close()
+            #     pass
 
         else:
             if get_remote_content_size(lastlink) == os.path.getsize(filepath):
@@ -426,16 +426,16 @@ def install_docker_compose():
         try:
             # stat -c %s docker_installer_resource/docker/linux/static/stable/x86_64/docker-17.09.0-ce.tgz
             urlretrieve(lastlink, filepath, _reporthook)
-        except socket.timeout:
-            pass
-        except IOError as e:
-            log.error(e.strerror)
-            raise e
+        # except socket.timeout:
+        #     pass
+        # except IOError as e:
+        #     log.error(e.strerror)
+        #     raise e
         except Exception as e:
             log.error(e)
-            pass
-        finally:
-            pass
+            raise e
+        # finally:
+        #     pass
             # urllib.urlcleanup()
             # ssh_client.close()
     else:
