@@ -1,4 +1,5 @@
 import urllib2
+#The urllib2 module has been split across several modules in Python 3 named urllib.request and urllib.error
 import paramiko
 import httplib
 import os

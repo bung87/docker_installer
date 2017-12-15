@@ -34,12 +34,15 @@ from subprocess import Popen,PIPE
 # ssl.PROTOCOL_SSLv23 = ssl.PROTOCOL_TLSv1
 # log,ssh,loginpassword,HOST_HOME,REMOTE_HOME,processor = None
 import shutil
+import io
 
 class FakeClient:
     def exec_command(self,s):
         pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        log.info("FakeClient:exec_command {0}".format(pip.stdout.read()))
-        return (pip.stdin,pip.stdout,pip.stderr)
+        output = pip.stdout.read()
+        f = io.StringIO(output.decode("utf8"))
+        log.info("FakeClient:exec_command {0}".format(output))
+        return (pip.stdin,f,pip.stderr)
 
 class FakeScpClient:
     def put(self,filepath, recursive, remote_path):
