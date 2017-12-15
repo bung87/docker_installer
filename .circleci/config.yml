@@ -2,14 +2,14 @@ version: 2
 jobs:
    build:
      docker:
-       - image: centos:7
+       - image: python:2.7.14-jessie
      steps:
        - checkout 
       #  - restore_cache:
       #      key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
       #  - save_cache:
       #     key: deps1-{{ .Branch }}-{{ checksum "setup.py" }}
-       - run: sudo pip install .
+       - run: su - && pip install .
        - run: docker_installer --local --log info --password
   #  test:
   #    docker:
