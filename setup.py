@@ -11,9 +11,9 @@ setup(
     description='',
     author='bung',
     author_email='crc32@qq.com',
-    # license='MIT',
+    license='MIT',
     keywords=['docker', 'installer', 'installation','command line', 'cli'],
-    url='http://gitcode.aggso.com/campus/docker_installer',
+    url='https://github.com/bung87/docker_installer',
     packages=['docker_installer'],
     package_dir={'docker_installer': 'docker_installer'},
     install_requires=[
@@ -27,7 +27,7 @@ setup(
     },
     classifiers=[
         'Development Status :: 1 - Alpha',
-        # 'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',

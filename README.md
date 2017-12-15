@@ -3,7 +3,7 @@
 install docker to remote machine through ssh automatically.  
 
 ## Installation
-`pip install git+http://gitcode.aggso.com/campus/docker_installer`  
+`pip install git+https://github.com/bung87/docker_installer`  
 install [pip](https://pip.pypa.io/en/latest/installing/) first if python version less than 2.7.9
 
 ## docker_installer 是什么?  
