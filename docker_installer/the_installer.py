@@ -37,7 +37,7 @@ import shutil
 
 class FakeClient:
     def exec_command(self,s):
-        pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,close_fds=True)
+        pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         log.info("FakeClient:exec_command {0}".format(pip.stdout.read()))
         return (pip.stdin,pip.stdout,pip.stderr)
 
