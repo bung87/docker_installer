@@ -75,19 +75,19 @@ def init():
     (system, node, release, version, machine, processor) = stdout.read().split("萌")
     if system == "Linux":
         stdin, stdout, stderr = ssh_client.exec_command("python -c 'import lsb_release;print lsb_release.get_lsb_information()'")
-        if stdout != "":
-            lsb = eval(stdout)
+        output = stdout.read()
+        if output != "":
+            lsb = eval(output)
             system = lsb.get("ID")
             release = lsb.get("RELEASE") # Ubuntu '16.04'
         else:
             stdin, stdout, stderr = ssh_client.exec_command("python -c 'import platform;print platform.linux_distribution()'")
-            if stdout != "":
-                lsb = eval(stdout)
+            output = stdout.read()
+            if output != "":
+                lsb = eval(output)
                 system = lsb[0].split(" ")[0]
                 release = lsb[1] # CentOS 7.3.1611
     processor = processor.strip()
-    print(system, node, release, version, machine, processor)
-    exit();
     stdin, stdout, stderr = ssh_client.exec_command("echo $HOME")
     REMOTE_HOME = stdout.read().strip()
 
