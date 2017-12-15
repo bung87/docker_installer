@@ -14,6 +14,7 @@ from scp import SCPClient
 import urlparse
 import urllib2
 import urllib
+import argparse,textwrap
 import socket
 if sys.version_info < (3,):
     from urllib import urlretrieve
@@ -28,21 +29,31 @@ try:
     import httplib
 except:
     import http.client as httplib
-
-
+from docker_installer import __version__
+from subprocess import Popen,PIPE
 # ssl.PROTOCOL_SSLv23 = ssl.PROTOCOL_TLSv1
 # log,ssh,loginpassword,HOST_HOME,REMOTE_HOME,processor = None
+import shutil
+
+class FakeClient:
+    def exec_command(self,s):
+        pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,close_fds=True)
+        return (pip.stdin,pip.stdout,pip.stderr)
+
+class FakeScpClient:
+    def put(self,filepath, recursive, remote_path):
+        shutil.copytree(filepath,remote_path)
 
 def init():
-    global log, ssh_client, loginpassword, HOST_HOME, REMOTE_HOME, system, processor,machine
+    global log, ssh_client, scp_client,loginpassword, HOST_HOME, REMOTE_HOME, system, processor,machine
     log = logging.getLogger(__name__)
-    loglevel = "ERROR"
+    # loglevel = "ERROR"
+    loglevel = args.log
     argvlen = len(sys.argv)
-    if argvlen == 5:
-        (script, server, port, user, loginpassword) = sys.argv
-    elif argvlen == 6:
-        (script, server, port, user, loginpassword, logarg) = sys.argv
-        loglevel = logarg.split("=")[1]
+    server = args.ip
+    port = args.port
+    user = args.user
+    loginpassword = args.password
 
     numeric_level = getattr(logging, loglevel.upper(), None)
 
@@ -50,7 +61,12 @@ def init():
         raise ValueError('Invalid log level: %s' % loglevel)
     logging.basicConfig(level=numeric_level)
     port = int(port)
-    ssh_client = createSSHClient(server, port, user, loginpassword)
+    if args.local:
+        ssh_client = FakeClient()
+        scp_client = FakeScpClient()
+    else:
+        ssh_client = createSSHClient(server, port, user, loginpassword)
+        scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
     HOST_HOME = os.path.expanduser('~')
 
     stdin, stdout, stderr = ssh_client.exec_command(
@@ -69,8 +85,9 @@ def init():
                 lsb = eval(stdout)
                 system = lsb[0].split(" ")[0]
                 release = lsb[1] # CentOS 7.3.1611
-
     processor = processor.strip()
+    print(system, node, release, version, machine, processor)
+    exit();
     stdin, stdout, stderr = ssh_client.exec_command("echo $HOME")
     REMOTE_HOME = stdout.read().strip()
 
@@ -122,7 +139,6 @@ def remote_home(path):
 def ensure_git():
     # https://www.kernel.org/pub/software/scm/git/git-core-0.99.6.tar.gz
     log.info("ensure_git")
-    scp = SCPClient(ssh_client.get_transport(), progress=progress)
     url = "https://www.kernel.org/pub/software/scm/git/"
     response = urllib.urlopen(url)
     soup = BeautifulSoup(response)
@@ -147,7 +163,7 @@ def ensure_git():
         stdin, stdout, stderr = ssh_client.exec_command("stat -c %s {0}".format(remote_file_path))
         filesize = stdout.read().strip()
         if not int(filesize) == os.path.getsize(filepath):
-            scp.put(filepath, recursive=True, remote_path=remote_file_path)
+            scp_client.put(filepath, recursive=True, remote_path=remote_file_path)
         ssh_client.exec_command(
             "cd {0} && tar -xzf {1}".format(remote_path, basename))
         # ensure libssl-dev libcurl-dev(libcurl4-openssl-dev)
@@ -177,7 +193,6 @@ def reporthook(callback, bytes_so_far, chunk_size, total_size):
 
 def install_docker_offline():
     log.info("install_docker_offline")
-    scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
     url = "https://download.docker.com/linux/static/stable/{arch}/".format(
         arch=processor)
     log.info("Fetch docker download index page:{0}".format(url))
@@ -235,7 +250,7 @@ def install_docker_offline():
     if not os.path.exists(filepath):
         log.info("Host has not docker tarball")
         if not is_host_can_access_docker():
-            exit
+            exit()
 
         _reporthook = partial(reporthook, callback)
         mkdir_p(os.path.dirname(filepath))
@@ -340,7 +355,7 @@ def is_target_can_access_internet():
 
 
 def install_docker_compose():
-    scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
+    
     url = "https://github.com/docker/compose/releases/latest"
     response = urllib.urlopen(url)
     soup = BeautifulSoup(response)
@@ -349,7 +364,7 @@ def install_docker_compose():
     length = len(anchors)
     if 0 == length:
         log.warn("Latest docker compose version unfound,exit;")
-        exit;
+        exit()
     last = anchors[length - 1]
     last_href = last["href"]
     basename = os.path.basename(last_href)
@@ -432,7 +447,7 @@ def precheck_install_docker_offline():
         install_docker_offline()
     else:
         log.error("Not fit prerequires!")
-        exit
+        exit()
 
 def install_docker():   
     if system in SUPPORTED_PLATFORM:
@@ -444,8 +459,29 @@ def install_docker():
     else:  # static
         log.error("Not supported platform!")
 
+def args_parse():
+    global args
+    parser = argparse.ArgumentParser(prog='docker_installer',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=textwrap.dedent(
+                                         'install docker to remote machine through ssh automatically.\ndocker_installer <ssh ip> <ssh port> <ssh user> --password <ssh password> --log <log level>')
+                                     )
+    parser.add_argument('ip', nargs="?",type=str)
+    parser.add_argument('port', nargs="?",type=int,default=22)
+    parser.add_argument('user', nargs="?",type=str)
+    parser.add_argument('--password', dest="password",nargs="?",type=str)
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {0}'.format(__version__))
+    parser.add_argument('--log', dest="log", default="ERROR",
+                        metavar="string", action='store', type=str)
+    parser.add_argument('--local', dest="local", default=False,action='store_true', help='install to local\ndocker_installer --password <rootpassword> --local')
+    args = parser.parse_args()
+    print(args)
+  
+
 def main():
     socket.setdefaulttimeout(10)
+    args_parse()
     init()
     docker_installed = check_if_docker_installed()
     if not docker_installed:
@@ -454,6 +490,7 @@ def main():
     if not compose_installed:
         install_docker_compose()
 
-    
+if __name__ =='__main__':
+    main()
   
 
