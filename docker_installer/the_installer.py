@@ -68,18 +68,20 @@ def init():
         ssh_client = createSSHClient(server, port, user, loginpassword)
         scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
     HOST_HOME = os.path.expanduser('~')
-
-    stdin, stdout, stderr = ssh_client.exec_command(
-        "export PYTHONIOENCODING=UTF-8;python -c 'import platform;print \"萌\".join(platform.uname())'")
-    try:
-        (system, node, release, version, machine, processor) = stdout.read().decode("utf8").split(u"萌")
-    except ValueError:
-         (system, node, release, version, machine) = stdout.read().decode("utf8").split(u"萌")
-    os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
-    with open(os_detect,"rb") as f:
+    uname = os.path.join(os.path.dirname(__file__),"uname.py")
+    with open(uname,"rb") as f:
         content = f.read()
-        stdin, stdout, stderr = ssh_client.exec_command("python -c '{0}'".format(content))
-        (os_market_name,release) = eval(stdout.read())
+        stdin, stdout, stderr = ssh_client.exec_command(
+            "export PYTHONIOENCODING=UTF-8;python -c '{0}'".format(content))
+        try:
+            (system, node, release, version, machine, processor) = stdout.read().decode("utf8").split(u"萌")
+        except ValueError:
+            (system, node, release, version, machine) = stdout.read().decode("utf8").split(u"萌")
+        os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
+        with open(os_detect,"rb") as f:
+            content = f.read()
+            stdin, stdout, stderr = ssh_client.exec_command("python -c '{0}'".format(content))
+            (os_market_name,release) = eval(stdout.read())
    
     processor = processor.strip()
     if not processor:
