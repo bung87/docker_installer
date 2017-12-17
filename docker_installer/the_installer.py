@@ -72,7 +72,7 @@ def init():
     stdin, stdout, stderr = ssh_client.exec_command(
         "export PYTHONIOENCODING=UTF-8;python -c 'import platform;print \"萌\".join(platform.uname())'")
 
-    (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
+    (system, node, release, version, machine, processor) = stdout.read().decode("utf8").split(u"萌")
     os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
     with open(os_detect,"rb") as f:
         content = f.read()
