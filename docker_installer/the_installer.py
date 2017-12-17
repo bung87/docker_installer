@@ -25,10 +25,6 @@ else:
 from functools import partial
 import ssl
 from functools import wraps
-try:
-    import httplib
-except:
-    import http.client as httplib
 from docker_installer import __version__
 from subprocess import Popen,PIPE
 # ssl.PROTOCOL_SSLv23 = ssl.PROTOCOL_TLSv1
@@ -40,7 +36,7 @@ class FakeClient:
     def exec_command(self,s):
         pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output = pip.stdout.read().replace(r"\n","")
-        f = io.StringIO(output.decode("utf8"))
+        f = io.BytesIO(output)
         log.info("FakeClient:exec_command {0}".format(output))
         return (pip.stdin,f,pip.stderr)
 
