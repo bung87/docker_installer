@@ -6,13 +6,16 @@ except ImportError:
     from urllib2 import urlopen,Request
 #The urllib2 module has been split across several modules in Python 3 named urllib.request and urllib.error
 import paramiko
-import httplib
+try:
+    from http.client import HTTPConnection
+except ImportError:
+    from httplib import HTTPConnection
 import os
 import errno
 
 def is_host_can_access_docker():
     docker_url = "download.docker.com"
-    conn = httplib.HTTPConnection(docker_url, timeout=5)
+    conn = HTTPConnection(docker_url, timeout=5)
     try:
         conn.request("HEAD", "/")
         conn.close()
@@ -25,7 +28,7 @@ def is_host_can_access_docker():
 
 def is_host_can_access_github():
     docker_url = "github.com"
-    conn = httplib.HTTPConnection(docker_url, timeout=5)
+    conn = HTTPConnection(docker_url, timeout=5)
     try:
         conn.request("HEAD", "/")
         conn.close()
