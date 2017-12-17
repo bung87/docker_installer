@@ -5,4 +5,4 @@ if sys.version_info < (3,3):
 else:
     uname = platform.uname()
     uname = (uname.system, uname.node, uname.release, uname.version, uname.machine, uname.processor)
-print(u"萌".join(uname))
+print(u"萌".join(uname).encode("utf8"))
