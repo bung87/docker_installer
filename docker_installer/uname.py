@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import platform,sys;
 if sys.version_info < (3,3):
     uname = platform.uname()
