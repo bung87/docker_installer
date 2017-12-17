@@ -11,16 +11,16 @@ import paramiko
 import logging
 import scp
 from scp import SCPClient
-import urlparse
-import urllib2
-import urllib
 import argparse,textwrap
 import socket
 if sys.version_info < (3,):
+    from urlparse import urlparse,urljoin,urlsplit
     from urllib import urlretrieve
+    from urllib2 import urlopen
     from BeautifulSoup import BeautifulSoup
 else:
-    from urllib.request import urlretrieve
+    from urllib.parse import urlparse,urljoin,urlsplit
+    from urllib.request import urlretrieve,urlopen
     from bs4 import BeautifulSoup
 from functools import partial
 import ssl
@@ -139,7 +139,7 @@ def ensure_git():
     # https://www.kernel.org/pub/software/scm/git/git-core-0.99.6.tar.gz
     log.info("ensure_git")
     url = "https://www.kernel.org/pub/software/scm/git/"
-    response = urllib.urlopen(url)
+    response = urlopen(url)
     soup = BeautifulSoup(response)
     regx = re.compile("^git-([0-9\.]+)\.tar\.gz$")
     anchors = soup.findAll('a', text=regx)
@@ -151,7 +151,7 @@ def ensure_git():
         last_href = last
     basename = os.path.basename(last_href)
     log.info("latest git version found:{0}".format(basename))
-    lastlink = urlparse.urljoin(url, last_href)
+    lastlink = urljoin(url, last_href)
     filepath = host_home(basename)
     extract_dir = os.path.splitext(os.path.splitext(basename)[0])[0]
     ver = regx.match(basename).group(1)
@@ -197,7 +197,7 @@ def install_docker_offline():
     log.info("Fetch docker download index page:{0}".format(url))
     for i in xrange(3):
         try:
-            response = urllib.urlopen(url)
+            response = urlopen(url)
         except socket.timeout:
             pass
         except IOError as e:
@@ -211,7 +211,7 @@ def install_docker_offline():
     last_href = last["href"]
     basename = os.path.basename(last_href)
     log.info("Latest docker version found:{0}".format(basename))
-    lastlink = urlparse.urljoin(url, last_href)
+    lastlink = urljoin(url, last_href)
     relpath = urlparse.urlsplit(url).path[1:]
     filepath = host_home(os.path.join(
         "docker", os.path.normpath(relpath), basename))
@@ -356,7 +356,7 @@ def is_target_can_access_internet():
 def install_docker_compose():
     
     url = "https://github.com/docker/compose/releases/latest"
-    response = urllib.urlopen(url)
+    response = urlopen(url)
     soup = BeautifulSoup(response)
     regx = re.compile("docker-compose-{s}-{m}".format(s=system, m=machine))
     anchors = soup.findAll('a', href=regx)
@@ -368,8 +368,8 @@ def install_docker_compose():
     last_href = last["href"]
     basename = os.path.basename(last_href)
     log.info("Latest docker compose version found:{0}".format(basename))
-    lastlink = urlparse.urljoin(url, last_href)
-    relpath = urlparse.urlsplit(url).path[1:]
+    lastlink = urljoin(url, last_href)
+    relpath = urlsplit(url).path[1:]
     filepath = host_home(os.path.join(
         "docker-compose", os.path.normpath(relpath), basename))
     remote_file_path = remote_home(basename)
