@@ -35,7 +35,8 @@ import io
 class FakeClient:
     def exec_command(self,s):
         pip = Popen(s, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        output = pip.stdout.read().replace(r"\n","")
+        output = pip.stdout.read()
+        output = output.replace(r"\n","")
         f = io.BytesIO(output)
         log.info("FakeClient:exec_command {0}".format(output))
         return (pip.stdin,f,pip.stderr)
