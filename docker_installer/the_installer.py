@@ -210,7 +210,7 @@ def install_docker_offline():
     basename = os.path.basename(last_href)
     log.info("Latest docker version found:{0}".format(basename))
     lastlink = urljoin(url, last_href)
-    relpath = urlparse.urlsplit(url).path[1:]
+    relpath = urlsplit(url).path[1:]
     filepath = host_home(os.path.join(
         "docker", os.path.normpath(relpath), basename))
     remote_file_path = remote_home(basename)
