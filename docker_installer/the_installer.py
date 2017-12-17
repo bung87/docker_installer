@@ -70,7 +70,7 @@ def init():
     HOST_HOME = os.path.expanduser('~')
 
     stdin, stdout, stderr = ssh_client.exec_command(
-        "python -c 'import platform;print \"萌\".join(platform.uname())'")
+        "export PYTHONIOENCODING=UTF-8;python -c 'import platform;print \"萌\".join(platform.uname())'")
 
     (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
     os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
