@@ -77,26 +77,12 @@ def init():
         "python -c 'import platform;print \"萌\".join(platform.uname())'")
 
     (system, node, release, version, machine, processor) = stdout.read().split(u"萌")
- 
-    if version.find("Ubuntu") > 0:
-        os_market_name = "Ubuntu"
-        found = re.findall("\d+\.\d+\.\d+", version)
-        if len(found):
-            release = found[0]
-    elif system == "Linux":
-        stdin, stdout, stderr = ssh_client.exec_command("python -c 'import lsb_release;print lsb_release.get_lsb_information()'")
-        output = stdout.read()
-        if output != "":
-            lsb = eval(output)
-            os_market_name = lsb.get("ID")
-            release = lsb.get("RELEASE") # Ubuntu '16.04'
-        else:
-            stdin, stdout, stderr = ssh_client.exec_command("python -c 'import platform;print platform.linux_distribution()'")
-            output = stdout.read()
-            if output != "":
-                lsb = eval(output)
-                os_market_name = lsb[0].split(" ")[0]
-                release = lsb[1] # CentOS 7.3.1611
+    os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
+    with open(os_detect,"rb") as f:
+        content = f.read()
+        stdin, stdout, stderr = ssh_client.exec_command("python -c '{0}'".format(content))
+        (os_market_name,release) = eval(stdout.read())
+   
     processor = processor.strip()
     if not processor:
         processor = machine

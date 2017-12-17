@@ -1,4 +1,9 @@
-import urllib2
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen,Request
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen,Request
 #The urllib2 module has been split across several modules in Python 3 named urllib.request and urllib.error
 import paramiko
 import httplib
@@ -32,9 +37,9 @@ def is_host_can_access_github():
         return False
 
 def get_remote_content_size(url):
-    request = urllib2.Request(url)
+    request = Request(url)
     request.get_method = lambda : 'HEAD'
-    response = urllib2.urlopen(request,timeout=5)
+    response = urlopen(request,timeout=5)
     return int(response.info()["Content-Length"])
 
 def createSSHClient(server, port, user, password):
