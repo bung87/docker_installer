@@ -20,5 +20,5 @@ elif system == "Linux":
         lsb = platform.linux_distribution()
         os_market_name = lsb[0].split(" ")[0]
         release = lsb[1] # CentOS 7.3.1611
-
-print(os_market_name,release)
+result = (os_market_name,release)
+print(result)
