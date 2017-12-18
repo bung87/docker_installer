@@ -530,8 +530,8 @@ def precheck_install_docker_offline():
         # git install
         ensure_git()
     stdin, stdout, stderr = ssh_client.exec_command(
-        "export PYTHONIOENCODING=UTF-8;python -c 'import platform;print \"萌\".join(platform.architecture())'")
-    bits, linkage = stdout.read().decode("utf8").split(u"萌")
+        "python -c 'import platform;print(platform.architecture())'")
+    bits, linkage = eval(stdout.read().decode("utf8"))
     if (ipv >= 1.4 and bits == "64bit"):
         install_docker_offline()
     else:
