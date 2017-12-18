@@ -28,7 +28,6 @@ from functools import wraps
 from docker_installer import __version__
 from subprocess import Popen,PIPE
 # ssl.PROTOCOL_SSLv23 = ssl.PROTOCOL_TLSv1
-# log,ssh,loginpassword,HOST_HOME,REMOTE_HOME,processor = None
 import shutil
 import io
 
@@ -72,8 +71,6 @@ def init():
     SEP = u"\u840c" if sys.version_info < (3,) else r"\xe8\x90\x8c"
     with open(uname,"r") as f:
         contents = f.read()
-        # contents = content.decode("utf8")
-        # contents = repr(contents)
         contents = contents.replace(r"\n",'\\')
         command =  "export PYTHONIOENCODING=UTF-8;python -c '{0}'".format( contents )
         stdin, stdout, stderr = ssh_client.exec_command( command )
@@ -212,8 +209,8 @@ def ensure_systemd():
     sv_path = host_home(os.path.join("docker", "docker.service"))
     urlretrieve(sk_url,sk_path)
     urlretrieve(sv_url,sv_path)
-    scp_client.put(sk_path, recursive=True, remote_path=" /etc/systemd/system/docker.socket")
-    scp_client.put(sv_path, recursive=True, remote_path=" /etc/systemd/system/docker.service")
+    scp_client.put(sk_path, recursive=True, remote_path="/etc/systemd/system/docker.socket")
+    scp_client.put(sv_path, recursive=True, remote_path="/etc/systemd/system/docker.service")
     
 
 def install_docker_offline():
@@ -433,8 +430,6 @@ def install_docker_online():
         # Wheezy only: The version of add-apt-repository on Wheezy adds a deb-src repository that does not exist.
         # You need to comment out this repository or running apt-get update will fail.          
         ssh_client.exec_command("apt-get install -y docker-ce")
-        
-
 
 def is_target_can_access_internet():
     stdin, stdout, stderr = ssh_client.exec_command("nc -z download.docker.com 80")
@@ -442,9 +437,7 @@ def is_target_can_access_internet():
         return False
     return True
 
-
 def install_docker_compose():
-    
     url = "https://github.com/docker/compose/releases/latest"
     response = urlopen(url)
     soup = BeautifulSoup(response)
@@ -586,5 +579,3 @@ def main():
 
 if __name__ =='__main__':
     main()
-  
-
