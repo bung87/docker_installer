@@ -352,6 +352,69 @@ def install_docker_online():
             """
         )
         ssh_client.exec_command("yum install docker-ce")
+    elif os_market_name == "Fedora":
+        #https://docs.docker.com/engine/installation/linux/docker-ce/fedora/#prerequisites
+        sshsudo(
+            """
+            dnf remove docker \
+                  docker-common \
+                  docker-selinux \
+                  docker-engine-selinux \
+                  docker-engine
+            """
+        )
+        sshsudo(
+            """
+            dnf -y install dnf-plugins-core
+            """
+        )
+        sshsudo(
+            """
+            dnf config-manager \
+            --add-repo \
+            https://download.docker.com/linux/fedora/docker-ce.repo
+            """
+        )
+        ssh_client.exec_command("dnf install docker-ce")
+    elif os_market_name == "Debian":
+        #https://docs.docker.com/engine/installation/linux/docker-ce/debian/#docker-ee-customers
+        sshsudo(
+            """
+            apt-get install \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            gnupg2 \
+            software-properties-common
+            """
+        )
+        sshsudo(
+            """
+            curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | sudo apt-key add -
+            """
+        )
+        if processor == "amd64" or processor == "x86_64":
+            sshsudo(
+                """
+                add-apt-repository \
+                "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+                $(lsb_release -cs) \
+                stable"
+                """
+            )
+        elif processor == "armhf":
+            sshsudo(
+                """
+                echo "deb [arch=armhf] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+                $(lsb_release -cs) stable" | \
+                sudo tee /etc/apt/sources.list.d/docker.list
+                """
+            )
+        # https://docs.docker.com/engine/installation/linux/docker-ce/debian/#set-up-the-repository
+        # Wheezy only: The version of add-apt-repository on Wheezy adds a deb-src repository that does not exist.
+        # You need to comment out this repository or running apt-get update will fail.          
+        ssh_client.exec_command("apt-get install docker-ce")
+        
 
 
 def is_target_can_access_internet():
