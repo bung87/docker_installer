@@ -69,6 +69,7 @@ def init():
         scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
     HOST_HOME = os.path.expanduser('~')
     uname = os.path.join(os.path.dirname(__file__),"uname.py")
+    SEP = u"\u840c" if sys.version_info < (3,) else r"\xe8\x90\x8c"
     with open(uname,"r") as f:
         contents = f.read()
         # contents = content.decode("utf8")
@@ -78,9 +79,10 @@ def init():
         stdin, stdout, stderr = ssh_client.exec_command( command )
         try:
             contents = stdout.read().decode("utf8")
-            (system, node, release, version, machine, processor) = contents.split(r"\xe8\x90\x8c")
+            (system, node, release, version, machine, processor) = contents.split(SEP)
         except ValueError:
-            (system, node, release, version, machine) = stdout.read().decode("utf8").split("\xe8\x90\x8c")
+            contents = stdout.read().decode("utf8")
+            (system, node, release, version, machine) = contents.split(SEP)
         os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
         with open(os_detect,"r") as f:
             content = f.read()
