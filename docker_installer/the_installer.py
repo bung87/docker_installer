@@ -146,6 +146,14 @@ def remote_home(path):
 def ensure_git():
     # https://www.kernel.org/pub/software/scm/git/git-core-0.99.6.tar.gz
     log.info("ensure_git")
+    if is_target_can_access_internet():
+        if os_market_name == "Ubuntu" or os_market_name == "Debian":
+            if os_market_name == "Ubuntu":
+                sshsudo("add-apt-repository ppa:git-core/ppa;apt update;")
+            sshsudo("apt-get install -y git")
+        elif os_market_name == "Fedora":
+            sshsudo("yum install -y git")
+        return
     url = "https://www.kernel.org/pub/software/scm/git/"
     response = urlopen(url)
     soup = BeautifulSoup(response)
@@ -197,21 +205,31 @@ def reporthook(callback,filepath, bytes_so_far, chunk_size, total_size):
     if bytes_so_far >= total_size:
         callback()
 
+def ensure_systemd():
+    sk_url = "https://raw.githubusercontent.com/docker/docker/master/contrib/init/systemd/docker.socket"
+    sv_url = "https://raw.githubusercontent.com/docker/docker/master/contrib/init/systemd/docker.service"
+    sk_path = host_home(os.path.join("docker", "docker.socket"))
+    sv_path = host_home(os.path.join("docker", "docker.service"))
+    urlretrieve(sk_url,sk_path)
+    urlretrieve(sv_url,sv_path)
+    scp_client.put(sk_path, recursive=True, remote_path=" /etc/systemd/system/docker.socket")
+    scp_client.put(sv_path, recursive=True, remote_path=" /etc/systemd/system/docker.service")
+    
 
 def install_docker_offline():
     log.info("install_docker_offline")
     url = "https://download.docker.com/linux/static/stable/{arch}/".format(
         arch=processor)
     log.info("Fetch docker download index page:{0}".format(url))
-    for i in xrange(3):
-        try:
-            response = urlopen(url)
-        except socket.timeout:
-            pass
-        except IOError as e:
-            log.error(e.strerror)
-            ssh_client.close()
-            raise e
+    # for i in xrange(3):
+    try:
+        response = urlopen(url)
+    except socket.timeout as e:
+        raise e
+    except IOError as e:
+        log.error(e.strerror)
+        # ssh_client.close()
+        raise e
     soup = BeautifulSoup(response)
     anchors = soup.findAll('a')
     length = len(anchors)
@@ -239,6 +257,7 @@ def install_docker_offline():
         ssh_client.exec_command(
             "cd {0} && tar -xzf {1}".format(remote_path, basename))
         sshsudo("cp {0}/* /usr/bin/".format(os.path.join(remote_path, "docker")))
+        ensure_systemd()
 
     if filesize == "":
         # docker tarball not downloaded on target
@@ -296,7 +315,7 @@ def install_docker_online():
         if processor in SUPPORTED_ARCH[os_market_name]:
             sshsudo("apt-get update")
             sshsudo("""
-                apt-get install \
+                apt-get install -y \
                 apt-transport-https \
                 ca-certificates \
                 curl \
@@ -330,7 +349,7 @@ def install_docker_online():
                       """)
 
             sshsudo("apt-get update")
-            sshsudo("apt-get install docker-ce")
+            sshsudo("apt-get install -y docker-ce")
             # sudo apt-get install docker-ce=<VERSION>  On production systems, you should install a specific version of Docker CE instead of always using the latest
         else:
             exit()
@@ -380,7 +399,7 @@ def install_docker_online():
         #https://docs.docker.com/engine/installation/linux/docker-ce/debian/#docker-ee-customers
         sshsudo(
             """
-            apt-get install \
+            apt-get install -y \
             apt-transport-https \
             ca-certificates \
             curl \
@@ -413,7 +432,7 @@ def install_docker_online():
         # https://docs.docker.com/engine/installation/linux/docker-ce/debian/#set-up-the-repository
         # Wheezy only: The version of add-apt-repository on Wheezy adds a deb-src repository that does not exist.
         # You need to comment out this repository or running apt-get update will fail.          
-        ssh_client.exec_command("apt-get install docker-ce")
+        ssh_client.exec_command("apt-get install -y docker-ce")
         
 
 
