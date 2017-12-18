@@ -69,19 +69,25 @@ def init():
         scp_client = SCPClient(ssh_client.get_transport(), progress=progress)
     HOST_HOME = os.path.expanduser('~')
     uname = os.path.join(os.path.dirname(__file__),"uname.py")
-    with open(uname,"rb") as f:
-        content = f.read()
-        stdin, stdout, stderr = ssh_client.exec_command(
-            "export PYTHONIOENCODING=UTF-8;python -c '{0}'".format(content))
+    with open(uname,"r") as f:
+        contents = f.read()
+        # contents = content.decode("utf8")
+        # contents = repr(contents)
+        contents = contents.replace(r"\n",'\\')
+        command =  "export PYTHONIOENCODING=UTF-8;python -c '{0}'".format( contents )
+        stdin, stdout, stderr = ssh_client.exec_command( command )
         try:
-            (system, node, release, version, machine, processor) = stdout.read().decode("utf8").split(u"萌")
+            contents = stdout.read().decode("utf8")
+            (system, node, release, version, machine, processor) = contents.split(r"\xe8\x90\x8c")
         except ValueError:
-            (system, node, release, version, machine) = stdout.read().decode("utf8").split(u"萌")
+            (system, node, release, version, machine) = stdout.read().decode("utf8").split("\xe8\x90\x8c")
         os_detect = os.path.join(os.path.dirname(__file__),"os_detect.py")
-        with open(os_detect,"rb") as f:
+        with open(os_detect,"r") as f:
             content = f.read()
             stdin, stdout, stderr = ssh_client.exec_command("python -c '{0}'".format(content))
-            (os_market_name,release) = eval(stdout.read())
+            content = stdout.read().strip()
+            if content:
+                (os_market_name,release) = eval(content)
    
     processor = processor.strip()
     if not processor:
@@ -104,7 +110,7 @@ def progress(filename, size, sent):
 
 def check_if_docker_installed():
     stdin, stdout, stderr = ssh_client.exec_command("docker -v")
-    output = stdout.read()
+    output = stdout.read().decode()
     groups = re.findall("\d+\.\d+", output)
     if output != ""  and len(groups) != 0 :
         log.info("Target already has docker installed!")
@@ -113,7 +119,7 @@ def check_if_docker_installed():
 
 def check_if_docker_compose_installed():
     stdin, stdout, stderr = ssh_client.exec_command("docker-compose -v")
-    output = stdout.read()
+    output = stdout.read().decode()
     groups = re.findall("\d+\.\d+", output)
     if output != ""  and len(groups) != 0:
         log.info("Target already has docker-compose installed!")

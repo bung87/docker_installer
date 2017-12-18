@@ -1,8 +1,6 @@
 #-*- coding: utf-8 -*-
-import platform,sys;
-if sys.version_info < (3,3):
-    uname = platform.uname()
-else:
-    uname = platform.uname()
-    uname = (uname.system, uname.node, uname.release, uname.version, uname.machine, uname.processor)
-print(u"萌".join(uname).encode("utf8"))
+import platform,sys
+uname =  platform.uname \
+if sys.version_info < (3,3) \
+else  (platform.system(), platform.node(), platform.release(), platform.version(), platform.machine(), platform.processor())
+print( u"萌".join(uname).encode("utf8") )

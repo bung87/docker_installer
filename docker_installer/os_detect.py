@@ -1,5 +1,8 @@
-import platform,re
-(system, node, release, version, machine, processor) = platform.uname()
+import platform,re,sys
+if sys.version_info < (3,3):
+    (system, node, release, version, machine, processor) = platform.uname()
+else:
+    (system, node, release, version, machine, processor) = (platform.system(), platform.node(), platform.release(), platform.version(), platform.machine(), platform.processor())
 os_market_name = release = ""
 if version.find("Ubuntu") > 0:
     os_market_name = "Ubuntu"
