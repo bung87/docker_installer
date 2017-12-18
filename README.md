@@ -23,6 +23,10 @@ if remote machine has no **git** installed or git version less than 1.7 this pro
 
 --log is optional.supported log level CRITICAL,ERROR,WARNING,INFO,DEBUG,NOTSET default is NOTSET.
 
+### install to your local machine  
+
+`docker_installer --local --log info --password <rootpassword>`
+
 ## download data store dirctory
 
 `~/docker_installer_resource`
